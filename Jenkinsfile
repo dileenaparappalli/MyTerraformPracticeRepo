@@ -3,21 +3,46 @@ pipeline {
 
     stages {
 
-        stage('Build') {
+        stage('Checkout Code') {
             steps {
-                echo 'Build Started'
+                git branch: 'main',
+                url: 'https://github.com/dileenaparappalli/MyTerraformPracticeRepo.git'
             }
         }
 
-        stage('Test') {
+        stage('Terraform Init') {
             steps {
-                echo 'Testing Application'
+                sh 'terraform init'
             }
         }
 
-        stage('Deploy') {
+        stage('Terraform Validate') {
             steps {
-                echo 'Deploying Application'
+                sh 'terraform validate'
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-creds'
+                ]]) {
+
+                    sh 'terraform plan'
+                }
+            }
+        }
+
+        stage('Terraform Apply') {
+            steps {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'awscredentials'
+                ]]) {
+
+                    sh 'terraform apply --auto-approve'
+                }
             }
         }
     }
